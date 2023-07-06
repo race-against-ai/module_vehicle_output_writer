@@ -1,0 +1,12 @@
+{
+    "pikoder_serial": "COM9",
+    "head_tracker_serial": "COM10",
+    "throttle_config": {
+        "max_throttle": 15,
+        "max_brake": 50,
+        "max_clutch": 50,
+        "max_steering": 100,
+        "steering_offset": 0.0
+    },
+    "head_tracking_status": false
+}

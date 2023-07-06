@@ -1,22 +1,13 @@
-# RAAI Module Template
-A GitHub Template for creating modular RAAI Components
+# RAAI Module Vehicle Output Writer
 
-## Stuff you need to change
-- Change the ```README.md``` according to your project
-- rename the ```your_project_folder``` to the name of your project
-- edit ```.gitattributes``` to the new folder
-- put your GitHub or Volkswagen email in the setup.py
-- import and execute your main file from the project folder into the root ```main.py```
-- adjust the ```pyinstaller.spec``` according to your project (mainly the name)
+RAAI Component responsible for sending Data to the Pikoder controlling the RC Car
 
-## Code Syntax
-To test your code type syntax run
+## Structure
+Input data is received from the Driver Input Reader module over the pynng address <br>
+``ipc:///tmp/RAAI/driver_input_reader.ipc``
 
-```
-tox -e types
-```
+The Data then gets processed with the Throttles send by the Control Panel over the address <br>
+``ipc:///tmp/RAAI/control_panel.ipc``
 
-or to check the style syntax run
-```
-tox -e styles
-```
+The Data itself gets send to the Pikoder specified in the config file and also gets published over the address <br>
+``ipc:///tmp/RAAI/vehicle_output_writer.ipc``

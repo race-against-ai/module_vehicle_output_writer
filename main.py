@@ -1,5 +1,7 @@
 # Copyright (C) 2022 NG:ITL
-# import the main file in the backend folder
+from vehicle_output_writer.vehicle_output_writer import VehicleOutputWriter
 
 if __name__ == "__main__":
-    print("enter you projects main function :)")
+    vehicle_output_writer = VehicleOutputWriter()
+    while True:
+        vehicle_output_writer.run()
