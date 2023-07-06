@@ -133,18 +133,7 @@ class VehicleOutputWriter:
             self.driver_input_subscriber.recv_fd: [self.driver_input_subscriber, self.driver_input]
         }
 
-    def receive_control_panel_configs(self) -> None:
-        if self.control_panel_subscriber.recv_fd:
-            self.control_panel_config = receive_data(self.control_panel_subscriber)
-
-    def receive_driver_data(self) -> None:
-        try:
-            self.driver_input = receive_data(self.driver_input_subscriber)
-            # print(self.driver_input)
-        except:
-            self.stop_car()
-
-    def receive_subscriber_data(self):
+    def receive_subscriber_data(self) -> None:
         readable_fds, _, _ = select.select(self.inputs, [], [])
 
         for readable_fds in readable_fds:
@@ -155,15 +144,6 @@ class VehicleOutputWriter:
         self.control_panel_config = self.fd_dict[self.control_panel_subscriber.recv_fd][1]
         print(self.control_panel_config)
         self.driver_input = self.fd_dict[self.driver_input_subscriber.recv_fd][1]
-
-    def stop_car(self) -> None:
-        print("---!lost connection to platform, stopping car!---")
-        self.driver_input = {
-            "throttle": 0.0,
-            "brake": 0.0,
-            "clutch": 0.0,
-            "steering": 0.0
-        }
 
     def process_data(self) -> None:
         self.receive_subscriber_data()
@@ -182,7 +162,7 @@ class VehicleOutputWriter:
         if self.ppm_encoder:
             self.ppm_encoder.update_driver_input(self.throttle, self.brake, self.steering)
 
-    def run(self):
+    def run(self) -> None:
         self.process_data()
         self.send_info_to_encoder()
         # print(self.steering)
