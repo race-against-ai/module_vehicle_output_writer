@@ -1,5 +1,5 @@
 {
-    "pikoder_serial": "COM9",
+    "pikoder_serial": "COM3",
     "head_tracker_serial": "COM10",
     "throttle_config": {
         "max_throttle": 15,

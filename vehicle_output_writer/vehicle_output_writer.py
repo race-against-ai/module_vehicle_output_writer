@@ -12,7 +12,7 @@ CONTROL_COMPONENT_PYNNG_ADDRESS = "ipc:///tmp/RAAI/vehicle_output_writer.ipc"
 PLATFORM_CONTROLLER_PYNNG_ADDRESS = "ipc:///tmp/RAAI/driver_input_reader.ipc"
 
 example_config = {
-    "pikoder_serial": "COM9",
+    "pikoder_serial": "COM3",
     "head_tracker_serial": "COM10",
     "throttle_config": {
         "max_throttle": 15,
@@ -88,6 +88,20 @@ class VehicleOutputWriter:
 
         self.config = read_config("./driver_output_config.json")
 
+
+        self.output_writer_publisher = pynng.Pub0()
+        self.output_writer_publisher.listen(CONTROL_COMPONENT_PYNNG_ADDRESS)
+
+        self.control_panel_subscriber = pynng.Sub0()
+        self.control_panel_subscriber.subscribe("config")
+        self.control_panel_subscriber.dial(CONTROL_PANEL_PYNNG_ADDRESS, block=False)
+
+        self.control_panel_config = self.config["throttle_config"]
+
+        self.driver_input_subscriber = pynng.Sub0()
+        self.driver_input_subscriber.subscribe("driver_input")
+        self.driver_input_subscriber.dial(PLATFORM_CONTROLLER_PYNNG_ADDRESS, block=False)
+
         self.ppm_encoder = None
         try:
             self.ppm_encoder_serial = Serial(self.config["pikoder_serial"])
@@ -102,19 +116,6 @@ class VehicleOutputWriter:
             # normally a qtimer is here. probably has a function that needs to be in a loop
         except:
             print("head tracker unavailable or wrong port in driver_output_settings.json")
-
-        self.output_writer_publisher = pynng.Pub0()
-        self.output_writer_publisher.listen(CONTROL_COMPONENT_PYNNG_ADDRESS)
-
-        self.control_panel_subscriber = pynng.Sub0()
-        self.control_panel_subscriber.subscribe("config")
-        self.control_panel_subscriber.dial(CONTROL_PANEL_PYNNG_ADDRESS, block=False)
-
-        self.control_panel_config = self.config["throttle_config"]
-
-        self.driver_input_subscriber = pynng.Sub0()
-        self.driver_input_subscriber.subscribe("driver_input")
-        self.driver_input_subscriber.dial(PLATFORM_CONTROLLER_PYNNG_ADDRESS, block=False)
 
         self.driver_input = {
             "throttle": 0.0,
@@ -142,7 +143,8 @@ class VehicleOutputWriter:
             # print(self.fd_dict[readable_fds][1])
 
         self.control_panel_config = self.fd_dict[self.control_panel_subscriber.recv_fd][1]
-        print(self.control_panel_config)
+        # print(self.control_panel_config)
+        # print(self.driver_input)
         self.driver_input = self.fd_dict[self.driver_input_subscriber.recv_fd][1]
 
     def process_data(self) -> None:
