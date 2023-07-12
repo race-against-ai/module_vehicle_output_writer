@@ -19,9 +19,9 @@ example_config = {
         "max_brake": 50,
         "max_clutch": 50,
         "max_steering": 100,
-        "steering_offset": 0.0
+        "steering_offset": 0.0,
     },
-    "head_tracking_status": False
+    "head_tracking_status": False,
 }
 
 
@@ -36,7 +36,8 @@ def send_data(pub: pynng.Pub0, payload: dict, topic: str = " ", p_print: bool = 
     """
     json_data = json.dumps(payload)
     msg = topic + json_data
-    if p_print is True: print(f"data send: {msg}")
+    if p_print is True:
+        print(f"data send: {msg}")
     pub.send(msg.encode())
 
 
@@ -49,8 +50,8 @@ def receive_data(sub: pynng.Sub0) -> dict:
     """
     msg = sub.recv()
     data = remove_pynng_topic(msg)
-    data = json.loads(data)
-    return data
+    result: dict = json.loads(data)
+    return result
 
 
 def remove_pynng_topic(data, sign: str = " ") -> str:
@@ -62,7 +63,7 @@ def remove_pynng_topic(data, sign: str = " ") -> str:
     """
     decoded_data: str = data.decode()
     i = decoded_data.find(sign)
-    decoded_data = decoded_data[i + 1:]
+    decoded_data = decoded_data[i + 1 :]
     return decoded_data
 
 
@@ -83,11 +84,8 @@ def read_config(config_file_path: str) -> dict:
 
 
 class VehicleOutputWriter:
-
     def __init__(self):
-
         self.config = read_config("./driver_output_config.json")
-
 
         self.output_writer_publisher = pynng.Pub0()
         self.output_writer_publisher.listen(CONTROL_COMPONENT_PYNNG_ADDRESS)
@@ -107,22 +105,17 @@ class VehicleOutputWriter:
             self.ppm_encoder_serial = Serial(self.config["pikoder_serial"])
             self.ppm_encoder = PPMEncoder(self.ppm_encoder_serial)
         except:
-            print('ppm_encoder unavailable or on wrong port in driver_output_settings.json')
+            print("ppm_encoder unavailable or on wrong port in driver_output_settings.json")
 
         self.head_tracker = None
         try:
-            self.head_tracker_serial = Serial(self.config['head_tracker_serial'], timeout=0)
+            self.head_tracker_serial = Serial(self.config["head_tracker_serial"], timeout=0)
             self.head_tracker = HeadTracker(self.head_tracker_serial)
             # normally a qtimer is here. probably has a function that needs to be in a loop
         except:
             print("head tracker unavailable or wrong port in driver_output_settings.json")
 
-        self.driver_input = {
-            "throttle": 0.0,
-            "brake": 0.0,
-            "clutch": 0.0,
-            "steering": 0.0
-        }
+        self.driver_input = {"throttle": 0.0, "brake": 0.0, "clutch": 0.0, "steering": 0.0}
 
         self.throttle = 0
         self.brake = 0
@@ -131,7 +124,7 @@ class VehicleOutputWriter:
         self.inputs = [self.control_panel_subscriber.recv_fd, self.driver_input_subscriber.recv_fd]
         self.fd_dict = {
             self.control_panel_subscriber.recv_fd: [self.control_panel_subscriber, self.control_panel_config],
-            self.driver_input_subscriber.recv_fd: [self.driver_input_subscriber, self.driver_input]
+            self.driver_input_subscriber.recv_fd: [self.driver_input_subscriber, self.driver_input],
         }
 
     def receive_subscriber_data(self) -> None:

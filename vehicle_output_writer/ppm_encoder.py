@@ -3,7 +3,6 @@ from serial import Serial
 
 
 class PPMEncoder(pikoder.ppm_encoder.PPMEncoder):
-
     def __init__(self, serial: Serial):
         if serial is not None:
             if serial.isOpen():
@@ -37,11 +36,11 @@ class PPMEncoder(pikoder.ppm_encoder.PPMEncoder):
 
         # old style, prefers brake over throttle
         # if brake_percent != 0:
-            # self.set_channel_percentage_bounded(1, -brake_percent)
+        # self.set_channel_percentage_bounded(1, -brake_percent)
         # elif throttle_percent != 0:
-            # self.set_channel_percentage_bounded(1, throttle_percent)
+        # self.set_channel_percentage_bounded(1, throttle_percent)
         # else:
-            # self.set_channel_percentage_bounded(1, 0)
+        # self.set_channel_percentage_bounded(1, 0)
 
         self.flush_input_buffer()
 
@@ -49,5 +48,3 @@ class PPMEncoder(pikoder.ppm_encoder.PPMEncoder):
         ppm_raw_value = 1500 - (1000 * (yaw_angle / 45.0))
         self.set_channel_raw_unbounded(3, int(ppm_raw_value))
         self.flush_input_buffer()
-
-
