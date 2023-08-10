@@ -1,4 +1,27 @@
 {
+    "pynng": {
+        "publishers": {
+            "output_writer_publisher": {
+                "address": "ipc:///tmp/RAAI/vehicle_output_writer.ipc",
+                "topics": {
+                }
+            }
+        },
+        "subscribers": {
+            "control_panel_subscriber": {
+                "address": "ipc:///tmp/RAAI/control_panel.ipc",
+                "topics": {
+                    "panel_config": "config"
+                }
+            },
+            "driver_input_subscriber": {
+                "address": "ipc:///tmp/RAAI/driver_input_reader.ipc",
+                "topics": {
+                    "driver_input": "driver_input"
+                }
+            }
+        }
+    },
     "pikoder_serial": "COM3",
     "head_tracker_serial": "COM10",
     "throttle_config": {

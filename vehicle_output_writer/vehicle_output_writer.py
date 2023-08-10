@@ -7,23 +7,6 @@ from serial import Serial
 from vehicle_output_writer.ppm_encoder import PPMEncoder
 from vehicle_output_writer.head_tracker import HeadTracker
 
-CONTROL_PANEL_PYNNG_ADDRESS = "ipc:///tmp/RAAI/control_panel.ipc"
-CONTROL_COMPONENT_PYNNG_ADDRESS = "ipc:///tmp/RAAI/vehicle_output_writer.ipc"
-PLATFORM_CONTROLLER_PYNNG_ADDRESS = "ipc:///tmp/RAAI/driver_input_reader.ipc"
-
-example_config = {
-    "pikoder_serial": "COM3",
-    "head_tracker_serial": "COM10",
-    "throttle_config": {
-        "max_throttle": 15,
-        "max_brake": 50,
-        "max_clutch": 50,
-        "max_steering": 100,
-        "steering_offset": 0.0,
-    },
-    "head_tracking_status": False,
-}
-
 
 def send_data(pub: pynng.Pub0, payload: dict, topic: str = " ", p_print: bool = True) -> None:
     """
@@ -69,36 +52,80 @@ def remove_pynng_topic(data, sign: str = " ") -> str:
 
 def read_config(config_file_path: str) -> dict:
     if os.path.isfile(config_file_path):
-        print("Config file found")
-        with open(config_file_path, "r") as file:
+        with open(config_file_path, 'r') as file:
             return json.load(file)
-
     else:
-        print("---!Config File not Found!---")
-        print("pikoder_serial: COM9 and head_tracker_serial: COM10")
+        return create_config(config_file_path)
 
-        config_data = json.dumps(example_config, indent=4)
-        with open(config_file_path, "w") as file:
-            file.write(config_data)
-            return example_config
+
+def create_config(config_file_path: str) -> dict:
+    """wrote this to ensure that a config file always exists, ports have to be adjusted if necessary"""
+    print("No Config File found, creating new one from Template")
+    print("---!Using default argments for a Config file")
+    template = {
+        "pynng": {
+            "publishers": {
+                "output_writer_publisher": {
+                    "address": "ipc:///tmp/RAAI/vehicle_output_writer.ipc",
+                    "topics": {
+                    }
+                }
+            },
+            "subscribers": {
+                "control_panel_subscriber": {
+                    "address": "ipc:///tmp/RAAI/control_panel.ipc",
+                    "topics": {
+                        "panel_config": "config"
+                    }
+                },
+                "driver_input_subscriber": {
+                    "address": "ipc:///tmp/RAAI/driver_input_reader.ipc",
+                    "topics": {
+                        "driver_input": "driver_input"
+                    }
+                }
+            }
+        },
+        "pikoder_serial": "COM3",
+        "head_tracker_serial": "COM10",
+        "throttle_config": {
+            "max_throttle": 15,
+            "max_brake": 50,
+            "max_clutch": 50,
+            "max_steering": 100,
+            "steering_offset": 0.0
+        },
+        "head_tracking_status": false
+    }
+
+    file = json.dumps(template, indent=4)
+    with open(config_file_path, 'w') as f:
+        f.write(file)
+
+    return template
 
 
 class VehicleOutputWriter:
     def __init__(self):
         self.config = read_config("./driver_output_config.json")
 
+        output_address = self.config["pynng"]["publishers"]["output_writer_publisher"]["address"]
         self.output_writer_publisher = pynng.Pub0()
-        self.output_writer_publisher.listen(CONTROL_COMPONENT_PYNNG_ADDRESS)
+        self.output_writer_publisher.listen(output_address)
 
+        panel_address = self.config["pynng"]["subscribers"]["control_panel_subscriber"]["address"]
+        panel_topic = self.config["pynng"]["subscribers"]["control_panel_subscriber"]["topics"]["panel_config"]
         self.control_panel_subscriber = pynng.Sub0()
-        self.control_panel_subscriber.subscribe("config")
-        self.control_panel_subscriber.dial(CONTROL_PANEL_PYNNG_ADDRESS, block=False)
+        self.control_panel_subscriber.subscribe(panel_topic)
+        self.control_panel_subscriber.dial(panel_address, block=False)
 
         self.control_panel_config = self.config["throttle_config"]
 
+        driver_address = self.config["pynng"]["subscribers"]["driver_input_subscriber"]["address"]
+        driver_topic = self.config["pynng"]["subscribers"]["driver_input_subscriber"]["topics"]["driver_input"]
         self.driver_input_subscriber = pynng.Sub0()
-        self.driver_input_subscriber.subscribe("driver_input")
-        self.driver_input_subscriber.dial(PLATFORM_CONTROLLER_PYNNG_ADDRESS, block=False)
+        self.driver_input_subscriber.subscribe(driver_topic)
+        self.driver_input_subscriber.dial(driver_address, block=False)
 
         self.ppm_encoder = None
         try:
